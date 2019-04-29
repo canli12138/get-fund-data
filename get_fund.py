@@ -1,8 +1,10 @@
-import urllib.request
+# -*- coding: utf-8 -*-
+import urllib2
 from setting import Setting
-import os
 import re
 import threadpool
+import sys
+print sys.getdefaultencoding()
 
 
 class Get_fund:
@@ -11,14 +13,14 @@ class Get_fund:
         self.regex = regex
 
     def download(self, user_agent='wswp'):
-        global html
         print('Downloading:', self.url)
         headers = {'User-agnet': user_agent}
-        request = urllib.request.Request(self.url, headers=headers)
+        request = urllib2.Request(self.url, headers=headers)
+        html = ''
         try:
-            html = urllib.request.urlopen(self.url).read().decode("UTF-8")
-        except urllib.request.URLError as e:
-            print('Download error:', e.reason)
+            html = urllib2.urlopen(self.url).read().decode("UTF-8")
+        except Exception as e:
+            print('Download error:', e)
         return html
 
     def get_data(self, html):
@@ -29,7 +31,7 @@ def get_fund_data(url, regex, result_data):
     fund = Get_fund(list(url.values())[0], regex)
     data = fund.download()
     result = re.findall('[-+]\d+\.\d+%', fund.get_data(data)[0])
-    result_data[list(url.keys())[0]] = result[0]
+    result_data[list(url.keys())[0]] = result[0].encode('utf-8')
     return result
 
 
@@ -39,7 +41,6 @@ if __name__ == '__main__':
     regex = settings.regex
     result_data = {}
     threadpool.threadpool(get_fund_data, url_queue, regex, result_data)
-    print(result_data)
     keys = list(result_data.keys())
     fp = open(settings.result_path, 'w')
     for key in keys:
